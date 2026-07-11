@@ -19,6 +19,8 @@ pub enum KnownServerConfigRole {
     StartupLegacy,
     ServerProperties,
     Pumpkin,
+    McdrConfig,
+    McdrPermission,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

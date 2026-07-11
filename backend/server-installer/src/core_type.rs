@@ -35,6 +35,7 @@ pub enum CoreType {
     Bungeecord,
     Lightfall,
     Travertine,
+    Mcdr,
     Unknown,
 }
 
@@ -97,6 +98,7 @@ impl CoreType {
         "powernukkitx",
         "pocketmine",
         "endstone",
+        "mcdr",
     ];
 
     pub fn all_api_core_keys() -> &'static [&'static str] {
@@ -136,6 +138,7 @@ impl CoreType {
             CoreType::Bungeecord => Some("bungeecord"),
             CoreType::Lightfall => Some("lightfall"),
             CoreType::Travertine => Some("travertine"),
+            CoreType::Mcdr => Some("mcdr"),
             CoreType::Unknown => None,
         }
     }
@@ -222,6 +225,7 @@ impl CoreType {
             CoreType::Bungeecord => "Bungeecord",
             CoreType::Lightfall => "Lightfall",
             CoreType::Travertine => "Travertine",
+            CoreType::Mcdr => "MCDR",
             CoreType::Unknown => "Unknown",
         }
     }
@@ -271,6 +275,7 @@ impl CoreType {
             (CoreType::Bungeecord, &["bungeecord"]),
             (CoreType::Lightfall, &["lightfall"]),
             (CoreType::Travertine, &["travertine"]),
+            (CoreType::Mcdr, &["mcdr", "mcdreforged"]),
         ]
     }
 }
@@ -319,6 +324,7 @@ impl FromStr for CoreType {
             "bungeecord" => Ok(CoreType::Bungeecord),
             "lightfall" => Ok(CoreType::Lightfall),
             "travertine" => Ok(CoreType::Travertine),
+            "mcdr" | "mcdreforged" => Ok(CoreType::Mcdr),
             "unknown" => Ok(CoreType::Unknown),
             _ => Err(format!("Unknown core type: {}", s)),
         }

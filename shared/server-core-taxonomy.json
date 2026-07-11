@@ -128,6 +128,15 @@
       "supportsPluginExtensions": true
     },
     {
+      "key": "mcdr",
+      "label": "MCDReforged",
+      "supportsPluginExtensions": true,
+      "aliases": [
+        { "value": "mcdreforged" },
+        { "value": "mcdr", "label": "MCDR" }
+      ]
+    },
+    {
       "key": "mohist",
       "label": "Mohist",
       "supportsPluginExtensions": true

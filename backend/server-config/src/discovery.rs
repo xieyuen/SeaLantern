@@ -556,6 +556,20 @@ fn known_role_ownership_and_priority(
             3,
         ));
     }
+    if file_name.eq_ignore_ascii_case("config.yml") && relative_path == "config.yml" {
+        return Some((
+            Some(KnownServerConfigRole::McdrConfig),
+            ServerConfigOwnership::ServerManaged,
+            4,
+        ));
+    }
+    if file_name.eq_ignore_ascii_case("permission.yml") && relative_path == "permission.yml" {
+        return Some((
+            Some(KnownServerConfigRole::McdrPermission),
+            ServerConfigOwnership::ServerManaged,
+            5,
+        ));
+    }
 
     let priority = match kind {
         ServerConfigFileKind::Properties => 10,

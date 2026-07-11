@@ -100,6 +100,35 @@ fn scan_folder_source(
     let mut candidates = Vec::new();
     let mut detected_core: Option<(u8, bool, String, ParsedServerCoreInfo)> = None;
 
+    // Detect MCDR server structure by checking for config.yml and permission.yml
+    let mcdr_config = source.join("config.yml");
+    let mcdr_permission = source.join("permission.yml");
+    if mcdr_config.exists() && mcdr_permission.exists() {
+        let parsed_info = ParsedServerCoreInfo {
+            core_type: "mcdr".to_string(),
+            main_class: None,
+            jar_path: None,
+        };
+        let detection_rank = (1_u8, false, "mcdr".to_string());
+        let should_replace = detected_core
+            .as_ref()
+            .map(|(best_recommended, best_unknown, best_label, _)| {
+                detection_rank < (*best_recommended, *best_unknown, best_label.clone())
+            })
+            .unwrap_or(true);
+        if should_replace {
+            detected_core = Some((detection_rank.0, detection_rank.1, detection_rank.2, parsed_info));
+        }
+        candidates.push(StartupCandidateItem {
+            id: "mcdr".to_string(),
+            mode: "mcdr".to_string(),
+            label: "MCDReforged".to_string(),
+            detail: "MCDReforged server wrapper".to_string(),
+            path: mcdr_config.to_string_lossy().to_string(),
+            recommended: 1,
+        });
+    }
+
     for path in entries {
         let filename = path
             .file_name()

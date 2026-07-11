@@ -123,8 +123,18 @@ pub fn inspect_local_folder_checked(folder: &Path) -> Result<LocalFolderInspecti
         return Ok(LocalFolderInspection::default());
     }
 
-    let startup_entry_path = resolve_attach_executable_path_checked(folder)?
-        .map(|path| path.to_string_lossy().to_string());
+    // Check for MCDR server structure first
+    let mcdr_config = folder.join("config.yml");
+    let mcdr_permission = folder.join("permission.yml");
+    let is_mcdr = mcdr_config.exists() && mcdr_permission.exists();
+
+    let startup_entry_path = if is_mcdr {
+        Some(mcdr_config.to_string_lossy().to_string())
+    } else {
+        resolve_attach_executable_path_checked(folder)?
+            .map(|path| path.to_string_lossy().to_string())
+    };
+
     let detected_jar_path = match find_server_jar(folder) {
         Ok(path) => Some(path),
         Err(error) if error == "整合包文件夹中未找到JAR文件" => None,
@@ -132,13 +142,20 @@ pub fn inspect_local_folder_checked(folder: &Path) -> Result<LocalFolderInspecti
             return Err(format!("本地目录探测失败: {}", error));
         }
     };
-    let startup_mode = startup_entry_path
-        .as_deref()
-        .map(detect_startup_mode_from_path_like)
-        .or_else(|| detected_jar_path.as_ref().map(|_| "jar".to_string()));
+
+    let startup_mode = if is_mcdr {
+        Some("mcdr".to_string())
+    } else {
+        startup_entry_path
+            .as_deref()
+            .map(detect_startup_mode_from_path_like)
+            .or_else(|| detected_jar_path.as_ref().map(|_| "jar".to_string()))
+    };
 
     let folder_display = folder.to_string_lossy();
-    let inferred_core_type = if let Some(path) = startup_entry_path.as_deref() {
+    let inferred_core_type = if is_mcdr {
+        "mcdr".to_string()
+    } else if let Some(path) = startup_entry_path.as_deref() {
         detect_core_key_checked(path)?
     } else if let Some(path) = detected_jar_path.as_deref() {
         detect_core_key_checked(path)?

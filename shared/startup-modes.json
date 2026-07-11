@@ -16,5 +16,8 @@
   },
   "custom": {
     "requiresJava": false
+  },
+  "mcdr": {
+    "requiresJava": false
   }
 }
