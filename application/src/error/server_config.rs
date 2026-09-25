@@ -61,6 +61,17 @@ impl From<sealantern_feature::config::server::ServerPropertiesError> for ServerC
     }
 }
 
+impl From<sealantern_feature::config::server::McdrConfigError> for ServerConfigError {
+    fn from(source: sealantern_feature::config::server::McdrConfigError) -> Self {
+        use sealantern_feature::config::server::McdrConfigError as FeatureMcdrConfigError;
+
+        match source {
+            FeatureMcdrConfigError::Parse(_) => Self::InvalidInput,
+            FeatureMcdrConfigError::Io(_) => Self::OperationFailed { source: Box::new(source) },
+        }
+    }
+}
+
 impl From<tokio::task::JoinError> for ServerConfigError {
     fn from(source: tokio::task::JoinError) -> Self {
         Self::Internal { source: Box::new(source) }

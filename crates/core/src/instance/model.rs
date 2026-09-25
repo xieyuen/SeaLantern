@@ -31,6 +31,9 @@ pub enum StartupMode {
     PowerShell,
     Starter,
     Custom,
+    /// MCDReforged（MCDR）包裹层启动：默认执行 `mcdreforged` 命令，
+    /// 也可用自定义命令或可执行文件覆盖（见 [`LocalLaunch`]）。
+    Mcdr,
 }
 
 impl StartupMode {
@@ -42,6 +45,7 @@ impl StartupMode {
             "ps1" | "powershell" => Ok(Self::PowerShell),
             "starter" => Ok(Self::Starter),
             "custom" => Ok(Self::Custom),
+            "mcdr" | "mcdreforged" => Ok(Self::Mcdr),
             _ => Err(InstanceError::UnsupportedStartupMode { value: value.to_string() }),
         }
     }
@@ -54,6 +58,7 @@ impl StartupMode {
             Self::PowerShell => "ps1",
             Self::Starter => "starter",
             Self::Custom => "custom",
+            Self::Mcdr => "mcdr",
         }
     }
 }
@@ -104,6 +109,20 @@ impl LocalLaunch {
                 if !has_command && !has_executable {
                     return Err(InstanceError::MissingCustomLaunch);
                 }
+                if has_command && (has_executable || !self.custom_arguments.is_empty()) {
+                    return Err(InstanceError::ConflictingCustomLaunch);
+                }
+                if self.startup_target.is_some() {
+                    return Err(InstanceError::UnexpectedStartupTarget { mode: self.startup_mode });
+                }
+                Ok(None)
+            }
+            // MCDR 模式与 custom 类似，但命令与可执行文件均可缺省：缺省时
+            // 由命令构建层回退到 `mcdreforged` 命令（见 command_build）。
+            StartupMode::Mcdr => {
+                let has_command = self.custom_command.is_some();
+                let has_executable = self.custom_executable.is_some();
+
                 if has_command && (has_executable || !self.custom_arguments.is_empty()) {
                     return Err(InstanceError::ConflictingCustomLaunch);
                 }
@@ -467,6 +486,53 @@ mod tests {
 
         let error = Instance::new(custom).expect_err("custom mode still needs a launch target");
         assert_eq!(error, InstanceError::MissingCustomLaunch);
+    }
+
+    #[test]
+    fn mcdr_launch_accepts_no_custom_launch_data_and_no_startup_target() {
+        let mut spec = base_spec();
+        spec.launch.startup_mode = StartupMode::Mcdr;
+        spec.launch.startup_target = None;
+
+        let instance = Instance::new(spec).expect("mcdr launch should be valid");
+
+        assert_eq!(instance.launch.startup_mode, StartupMode::Mcdr);
+        assert!(instance.launch.startup_target.is_none());
+        assert!(instance.launch.custom_command.is_none());
+        assert!(instance.launch.custom_executable.is_none());
+    }
+
+    #[test]
+    fn mcdr_launch_accepts_custom_command_but_not_arguments() {
+        let mut spec = base_spec();
+        spec.launch.startup_mode = StartupMode::Mcdr;
+        spec.launch.startup_target = None;
+        spec.launch.custom_command = Some("python -m mcdreforged".to_string());
+        spec.launch.custom_arguments = vec!["--nogui".to_string()];
+
+        let error = Instance::new(spec).expect_err("arguments require an executable");
+
+        assert_eq!(error, InstanceError::ConflictingCustomLaunch);
+    }
+
+    #[test]
+    fn mcdr_launch_rejects_a_startup_target() {
+        let mut spec = base_spec();
+        spec.launch.startup_mode = StartupMode::Mcdr;
+
+        let error = Instance::new(spec).expect_err("mcdr mode must not define a startup target");
+
+        assert_eq!(error, InstanceError::UnexpectedStartupTarget { mode: StartupMode::Mcdr });
+    }
+
+    #[test]
+    fn startup_mode_parsing_accepts_mcdr_aliases() {
+        assert_eq!(StartupMode::parse("mcdr").expect("mcdr alias"), StartupMode::Mcdr);
+        assert_eq!(
+            StartupMode::parse("MCDReforged").expect("mcdreforged alias"),
+            StartupMode::Mcdr
+        );
+        assert_eq!(StartupMode::Mcdr.as_str(), "mcdr");
     }
 
     #[test]

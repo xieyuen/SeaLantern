@@ -12,22 +12,23 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use sealantern_contract::ServerConfigServiceError;
-use sealantern_contract::server_config::ServerProperties;
-use sealantern_feature::config::server::{ServerPropertiesError, ServerPropertiesManager};
+use sealantern_contract::server_config::{McdrConfig, McdrConfigFile, ServerProperties};
+use sealantern_feature::config::server::{McdrConfigManager, ServerPropertiesManager};
 
 use crate::error::ServerConfigError;
 use crate::port::ServerConfigService;
 
 /// 将阻塞的文件操作调度到阻塞线程池，统一收敛错误。
-async fn run_blocking<T, F>(operation: F) -> Result<T, ServerConfigError>
+async fn run_blocking<T, E, F>(operation: F) -> Result<T, ServerConfigError>
 where
     T: Send + 'static,
-    F: FnOnce() -> Result<T, ServerPropertiesError> + Send + 'static,
+    E: Into<ServerConfigError> + Send + 'static,
+    F: FnOnce() -> Result<T, E> + Send + 'static,
 {
     tokio::task::spawn_blocking(operation)
         .await
         .map_err(ServerConfigError::from)?
-        .map_err(ServerConfigError::from)
+        .map_err(Into::into)
 }
 
 /// 基于 `feature` 配置读写能力的 server.properties 服务实现。
@@ -104,6 +105,54 @@ impl ServerConfigService for CoreServerConfigService {
         let source = source.to_owned();
         let values = values.clone();
         run_blocking(move || ServerPropertiesManager::preview_write_from_source(&source, &values))
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn read_mcdr_config(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+    ) -> Result<McdrConfig, ServerConfigServiceError> {
+        let path = server_path.to_owned();
+        run_blocking(move || McdrConfigManager::new(path).read(file))
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn write_mcdr_config(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+        values: &BTreeMap<String, String>,
+    ) -> Result<(), ServerConfigServiceError> {
+        let path = server_path.to_owned();
+        let values = values.clone();
+        run_blocking(move || McdrConfigManager::new(path).write(file, &values))
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn read_mcdr_config_source(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+    ) -> Result<String, ServerConfigServiceError> {
+        let path = server_path.to_owned();
+        run_blocking(move || McdrConfigManager::new(path).read_source(file))
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn write_mcdr_config_source(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+        source: &str,
+    ) -> Result<(), ServerConfigServiceError> {
+        let path = server_path.to_owned();
+        let source = source.to_owned();
+        run_blocking(move || McdrConfigManager::new(path).write_source(file, &source))
             .await
             .map_err(Into::into)
     }

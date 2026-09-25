@@ -53,8 +53,9 @@ use adapter::tauri::commands::server::{
 };
 use adapter::tauri::commands::server_config::{
     parse_server_properties_source, preview_server_properties_write,
-    preview_server_properties_write_from_source, read_server_properties,
-    read_server_properties_source, write_server_properties, write_server_properties_source,
+    preview_server_properties_write_from_source, read_mcdr_config, read_mcdr_config_source,
+    read_server_properties, read_server_properties_source, write_mcdr_config,
+    write_mcdr_config_source, write_server_properties, write_server_properties_source,
 };
 use adapter::tauri::commands::settings::{
     export_settings, get_settings, get_system_fonts, import_settings, reset_settings,
@@ -234,6 +235,10 @@ fn main() {
             read_server_properties_source,
             write_server_properties,
             write_server_properties_source,
+            read_mcdr_config,
+            write_mcdr_config,
+            read_mcdr_config_source,
+            write_mcdr_config_source,
             //服务器定时任务契约命令
             create_cron_task,
             delete_cron_task,

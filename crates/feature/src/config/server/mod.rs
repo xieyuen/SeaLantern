@@ -2,6 +2,8 @@
 //!
 //! 提供读取、写入、解析 server.properties 文件的能力
 
+pub mod mcdr;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -10,6 +12,7 @@ use sealantern_infra::fs::{FileLock, FsError, write_atomic_blocking};
 use tracing::debug;
 
 // 配置契约模型统一由 `sealantern-contract` 提供，feature 侧 re-export 保持兼容。
+pub use mcdr::{McdrConfigError, McdrConfigManager};
 pub use sealantern_contract::server_config::{ConfigEntry, ServerProperties};
 
 /// server.properties 文件管理器

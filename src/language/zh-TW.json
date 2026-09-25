@@ -351,7 +351,10 @@
     "copy_conflict_title": "File Conflicts Detected",
     "copy_conflict_description": "Files with the same name already exist in target path. Continue to overwrite.",
     "copy_conflict_more": "And {count} more conflict items",
-    "copy_conflict_confirm": "Continue Overwrite"
+    "copy_conflict_confirm": "Continue Overwrite",
+    "startup_mode_mcdr": "MCDR",
+    "startup_mcdr_command_label": "MCDR 啟動指令",
+    "startup_mcdr_command_placeholder": "例如：mcdreforged"
   },
   "console": {
     "title": "控制台",
@@ -1147,7 +1150,6 @@
     "mode_join": "加入",
     "share_link": "分享連結",
     "copy_link": "複製連結",
-
     "copied": "已複製",
     "stop": "停止隧道",
     "host_title": "建房",

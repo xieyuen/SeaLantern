@@ -31,3 +31,35 @@ pub struct ServerProperties {
     /// 原始键值对
     pub raw: BTreeMap<String, String>,
 }
+
+/// MCDR（MCDReforged）配置文件角色。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum McdrConfigFile {
+    /// `config.yml`：MCDR 主配置。
+    Config,
+    /// `permission.yml`：MCDR 权限配置。
+    Permission,
+}
+
+impl McdrConfigFile {
+    pub fn file_name(self) -> &'static str {
+        match self {
+            Self::Config => "config.yml",
+            Self::Permission => "permission.yml",
+        }
+    }
+}
+
+/// MCDR 配置文件结构（`config.yml` / `permission.yml` 的顶层键值视图）。
+///
+/// 顶层简单标量键可编辑；嵌套结构（列表、映射）保留在原始文本中，避免破坏 YAML 层级。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McdrConfig {
+    /// 文件角色。
+    pub file: McdrConfigFile,
+    /// 可视化配置条目列表（顶层标量键）。
+    pub entries: Vec<ConfigEntry>,
+    /// 原始顶层键值对。
+    pub raw: BTreeMap<String, String>,
+}

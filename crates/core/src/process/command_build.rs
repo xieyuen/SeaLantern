@@ -15,6 +15,8 @@ pub enum CommandBuildMode {
     Batch,
     Shell,
     PowerShell,
+    /// MCDReforged（MCDR）包裹层：默认执行 `mcdreforged`，可用自定义命令或可执行文件覆盖。
+    Mcdr,
 }
 
 impl CommandBuildMode {
@@ -25,6 +27,7 @@ impl CommandBuildMode {
             Self::Batch => "batch",
             Self::Shell => "shell",
             Self::PowerShell => "powershell",
+            Self::Mcdr => "mcdr",
         }
     }
 }
@@ -120,7 +123,9 @@ impl<'a> CommandBuildRequest<'a> {
 
     /// 返回由具体进程构造请求所隐含的输入策略。
     pub(crate) fn console_input_policy(&self) -> ConsoleInputPolicy {
-        if matches!(self.mode, CommandBuildMode::DirectJar)
+        // MCDR 包裹层依赖控制台输入转发指令，无论采用缺省命令、shell 命令
+        // 还是直接可执行文件，均保留标准输入句柄。
+        if matches!(self.mode, CommandBuildMode::DirectJar | CommandBuildMode::Mcdr)
             || matches!(custom_launch(self), Ok(CustomLaunch::Executable(_)))
         {
             ConsoleInputPolicy::Enabled
@@ -183,6 +188,7 @@ pub fn build_command(request: &CommandBuildRequest<'_>) -> Result<Command, Comma
         CommandBuildMode::Batch => build_batch_command(request),
         CommandBuildMode::Shell => build_shell_command(request),
         CommandBuildMode::PowerShell => build_powershell_command(request),
+        CommandBuildMode::Mcdr => build_mcdr_command(request),
     }
 }
 
@@ -221,6 +227,27 @@ fn build_custom_command(request: &CommandBuildRequest<'_>) -> Result<Command, Co
             command.args(request.custom_arguments);
             command
         }
+    };
+
+    apply_optional_java_environment(&mut command, request.java_environment);
+    command.current_dir(request.working_directory);
+    Ok(command)
+}
+
+/// MCDReforged 默认启动命令（要求 `mcdreforged` 已在 PATH 中）。
+const DEFAULT_MCDR_COMMAND: &str = "mcdreforged";
+
+fn build_mcdr_command(request: &CommandBuildRequest<'_>) -> Result<Command, CommandBuildError> {
+    let mut command = match custom_launch(request) {
+        Ok(CustomLaunch::Shell(command_text)) => shell_command(command_text),
+        Ok(CustomLaunch::Executable(executable)) => {
+            let mut command = Command::new(executable);
+            command.args(request.custom_arguments);
+            command
+        }
+        // MCDR 模式允许缺省自定义启动数据：回退到 `mcdreforged` 命令。
+        Err(CommandBuildError::MissingCustomLaunch) => Command::new(DEFAULT_MCDR_COMMAND),
+        Err(error) => return Err(error),
     };
 
     apply_optional_java_environment(&mut command, request.java_environment);
@@ -618,6 +645,54 @@ mod tests {
                     .as_deref()
                     .is_some_and(|value| value.starts_with("C:/Java/bin"))
         }));
+    }
+
+    #[test]
+    fn mcdr_mode_defaults_to_the_mcdreforged_program() {
+        let request = CommandBuildRequest::new(CommandBuildMode::Mcdr, Path::new("server"));
+
+        let command = build_command(&request).expect("mcdr command should build");
+
+        assert_eq!(command.get_program().to_string_lossy(), "mcdreforged");
+        assert!(arguments(&command).is_empty());
+        assert_eq!(request.console_input_policy(), ConsoleInputPolicy::Enabled);
+    }
+
+    #[test]
+    fn mcdr_mode_uses_a_custom_executable_with_arguments() {
+        let mut request = CommandBuildRequest::new(CommandBuildMode::Mcdr, Path::new("server"));
+        let custom_executable = Path::new("python");
+        let custom_arguments = vec![OsString::from("-m"), OsString::from("mcdreforged")];
+        request.custom_executable = Some(custom_executable);
+        request.custom_arguments = &custom_arguments;
+
+        let command = build_command(&request).expect("mcdr executable should build");
+
+        assert_eq!(command.get_program(), custom_executable);
+        assert_eq!(arguments(&command), vec!["-m", "mcdreforged"]);
+        assert_eq!(request.console_input_policy(), ConsoleInputPolicy::Enabled);
+    }
+
+    #[test]
+    fn mcdr_mode_uses_the_platform_shell_for_a_custom_command() {
+        let mut request = CommandBuildRequest::new(CommandBuildMode::Mcdr, Path::new("server"));
+        request.custom_command = Some("python -m mcdreforged");
+
+        let command = build_command(&request).expect("mcdr shell command should build");
+
+        #[cfg(target_os = "windows")]
+        {
+            assert_eq!(command.get_program().to_string_lossy(), "cmd");
+            assert_eq!(arguments(&command), vec!["/d", "/c", "python -m mcdreforged"]);
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            assert_eq!(command.get_program().to_string_lossy(), "sh");
+            assert_eq!(arguments(&command), vec!["-c", "python -m mcdreforged"]);
+        }
+
+        assert_eq!(request.console_input_policy(), ConsoleInputPolicy::Enabled);
     }
 
     #[cfg(not(target_os = "windows"))]

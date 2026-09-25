@@ -44,7 +44,7 @@ export interface ForceStopPreparation {
 
 export interface StartupCandidateItem {
   id: string;
-  mode: "starter" | "jar" | "bat" | "sh" | "ps1";
+  mode: "starter" | "jar" | "bat" | "sh" | "ps1" | "mcdr";
   label: string;
   detail: string;
   path: string;
@@ -118,10 +118,11 @@ interface LaunchProfile {
 }
 
 interface LaunchTarget {
-  kind: "jar" | "main_class" | "argument_files" | "script";
+  kind: "jar" | "main_class" | "argument_files" | "script" | "command";
   path?: string;
   class_name?: string;
   paths?: string[];
+  command?: string;
 }
 
 interface Attributed<T> {
@@ -301,7 +302,7 @@ export const serverApi = {
   async importServer(params: {
     name: string;
     jarPath: string;
-    startupMode: "jar" | "bat" | "sh" | "ps1";
+    startupMode: "jar" | "bat" | "sh" | "ps1" | "mcdr";
     javaPath: string;
     maxMemory: number;
     minMemory: number;
@@ -327,7 +328,7 @@ export const serverApi = {
     maxMemory: number;
     minMemory: number;
     port: number;
-    startupMode: "starter" | "jar" | "bat" | "sh" | "ps1" | "custom";
+    startupMode: "starter" | "jar" | "bat" | "sh" | "ps1" | "custom" | "mcdr";
     onlineMode: boolean;
     customCommand?: string;
     runPath: string;
@@ -431,6 +432,19 @@ export const serverApi = {
         case "main_class":
         case "argument_files":
           return [];
+        // MCDR 包裹层：以命令为目标，映射为 mcdr 启动模式。
+        case "command": {
+          const command = launch.value.target.command ?? "";
+          candidate = {
+            id: launch.value.id,
+            mode: "mcdr",
+            label: `MCDReforged: ${command || "mcdreforged"}`,
+            detail: `Platform: ${launch.value.platform}`,
+            path: "",
+            recommended: 100 - index * 10,
+          };
+          break;
+        }
       }
 
       return candidate ? [candidate] : [];
@@ -478,7 +492,7 @@ export const serverApi = {
     maxMemory: number;
     minMemory: number;
     port: number;
-    startupMode: "jar" | "bat" | "sh" | "ps1";
+    startupMode: "jar" | "bat" | "sh" | "ps1" | "mcdr";
     executablePath?: string;
   }): Promise<ServerInstance> {
     return tauriInvoke("add_existing_server", {

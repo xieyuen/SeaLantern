@@ -351,7 +351,10 @@
     "copy_conflict_title": "File Conflicts Detected",
     "copy_conflict_description": "Files with the same name already exist in target path. Continue to overwrite.",
     "copy_conflict_more": "And {count} more conflict items",
-    "copy_conflict_confirm": "Continue Overwrite"
+    "copy_conflict_confirm": "Continue Overwrite",
+    "startup_mode_mcdr": "MCDR",
+    "startup_mcdr_command_label": "Lệnh khởi động MCDR",
+    "startup_mcdr_command_placeholder": "ví dụ: mcdreforged"
   },
   "console": {
     "title": "Bảng điều khiển",
@@ -1147,7 +1150,6 @@
     "mode_join": "Tham gia",
     "share_link": "Liên kết chia sẻ",
     "copy_link": "Sao chép liên kết",
-
     "copied": "Đã sao chép",
     "stop": "Dừng Tunnel",
     "host_title": "Chủ nhà",

@@ -351,7 +351,10 @@
     "copy_conflict_title": "File Conflicts Detected",
     "copy_conflict_description": "Files with the same name already exist in target path. Continue to overwrite.",
     "copy_conflict_more": "And {count} more conflict items",
-    "copy_conflict_confirm": "Continue Overwrite"
+    "copy_conflict_confirm": "Continue Overwrite",
+    "startup_mode_mcdr": "MCDR",
+    "startup_mcdr_command_label": "Comando de inicio de MCDR",
+    "startup_mcdr_command_placeholder": "p. ej. mcdreforged"
   },
   "console": {
     "title": "Consola",
@@ -1147,7 +1150,6 @@
     "mode_join": "Unirse",
     "share_link": "Enlace para compartir",
     "copy_link": "Copiar enlace",
-
     "copied": "Copiado",
     "stop": "Detener túnel",
     "host_title": "Anfitrión",

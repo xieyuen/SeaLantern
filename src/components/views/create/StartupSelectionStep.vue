@@ -59,6 +59,8 @@ function startupModeLabel(mode: StartupMode): string {
     case "sh":
     case "ps1":
       return i18n.t("create.startup_mode_script");
+    case "mcdr":
+      return i18n.t("create.startup_mode_mcdr");
     default:
       return i18n.t("create.startup_mode_custom");
   }
@@ -83,6 +85,8 @@ function getStartupIcon(mode: StartupMode) {
     case "bat":
     case "sh":
     case "ps1":
+      return TerminalSquare;
+    case "mcdr":
       return TerminalSquare;
     default:
       return FolderOpen;
@@ -140,12 +144,23 @@ function getStartupIcon(mode: StartupMode) {
           </div>
         </button>
 
-        <div v-if="candidate.mode === 'custom'" class="startup-inline-custom">
+        <div
+          v-if="candidate.mode === 'custom' || candidate.mode === 'mcdr'"
+          class="startup-inline-custom"
+        >
           <cmz-input
-            :label="i18n.t('create.startup_custom_label')"
+            :label="
+              candidate.mode === 'mcdr'
+                ? i18n.t('create.startup_mcdr_command_label')
+                : i18n.t('create.startup_custom_label')
+            "
             :model-value="customStartupCommand"
             :disabled="disabled"
-            :placeholder="i18n.t('create.startup_custom_placeholder')"
+            :placeholder="
+              candidate.mode === 'mcdr'
+                ? i18n.t('create.startup_mcdr_command_placeholder')
+                : i18n.t('create.startup_custom_placeholder')
+            "
             @update:model-value="emit('update:customStartupCommand', $event)"
           />
           <p class="startup-step-hint">{{ i18n.t("create.startup_custom_hint") }}</p>

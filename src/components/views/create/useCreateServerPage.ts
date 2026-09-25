@@ -776,10 +776,13 @@ export function useCreateServerPage() {
         port: parseNumber(port.value, 25565),
         startupMode,
         onlineMode: onlineMode.value,
-        customCommand: startupMode === "custom" ? customStartupCommand.value.trim() : undefined,
+        customCommand:
+          startupMode === "custom" || startupMode === "mcdr"
+            ? customStartupCommand.value.trim()
+            : undefined,
         runPath: runPath.value.trim(),
         startupFilePath:
-          startupMode === "custom"
+          startupMode === "custom" || startupMode === "mcdr"
             ? undefined
             : isDownloadMode.value
               ? scannedStartup?.path

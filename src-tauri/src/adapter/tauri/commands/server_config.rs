@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use sealantern_application::port::ServerConfigService;
 use sealantern_application::services::AppServices;
 use sealantern_contract::ServerConfigServiceError;
-use sealantern_contract::server_config::ServerProperties;
+use sealantern_contract::server_config::{McdrConfig, McdrConfigFile, ServerProperties};
 use tauri::State;
 
 /// 读取服务器配置文件 (server.properties)
@@ -81,5 +81,59 @@ pub async fn preview_server_properties_write_from_source(
     services
         .server_config()
         .preview_write_from_source(&source, &values)
+        .await
+}
+
+/// 读取 MCDR 配置文件（config.yml / permission.yml）为可视化配置结构
+#[tauri::command]
+pub async fn read_mcdr_config(
+    services: State<'_, AppServices>,
+    server_path: String,
+    file: McdrConfigFile,
+) -> Result<McdrConfig, ServerConfigServiceError> {
+    services
+        .server_config()
+        .read_mcdr_config(&server_path, file)
+        .await
+}
+
+/// 按键值对更新 MCDR 配置文件（保留注释、顺序与嵌套结构）
+#[tauri::command]
+pub async fn write_mcdr_config(
+    services: State<'_, AppServices>,
+    server_path: String,
+    file: McdrConfigFile,
+    values: BTreeMap<String, String>,
+) -> Result<(), ServerConfigServiceError> {
+    services
+        .server_config()
+        .write_mcdr_config(&server_path, file, &values)
+        .await
+}
+
+/// 读取 MCDR 配置文件原始文本
+#[tauri::command]
+pub async fn read_mcdr_config_source(
+    services: State<'_, AppServices>,
+    server_path: String,
+    file: McdrConfigFile,
+) -> Result<String, ServerConfigServiceError> {
+    services
+        .server_config()
+        .read_mcdr_config_source(&server_path, file)
+        .await
+}
+
+/// 直接写入 MCDR 配置文件原始文本
+#[tauri::command]
+pub async fn write_mcdr_config_source(
+    services: State<'_, AppServices>,
+    server_path: String,
+    file: McdrConfigFile,
+    source: String,
+) -> Result<(), ServerConfigServiceError> {
+    services
+        .server_config()
+        .write_mcdr_config_source(&server_path, file, &source)
         .await
 }

@@ -54,7 +54,7 @@ export function sortStartupCandidates(candidates: StartupCandidate[]): StartupCa
 }
 
 export function mapStartupModeForApi(
-  mode: Exclude<StartupMode, "custom">,
+  mode: Exclude<StartupMode, "custom" | "mcdr">,
 ): "jar" | "bat" | "sh" | "ps1" {
   switch (mode) {
     case "bat":
@@ -70,12 +70,12 @@ export function mapStartupModeForApi(
 
 export function mapStartupModeForModpack(
   mode: StartupMode,
-): "starter" | "jar" | "bat" | "sh" | "ps1" | "custom" {
+): "starter" | "jar" | "bat" | "sh" | "ps1" | "custom" | "mcdr" {
   if (mode === "starter") {
     return "starter";
   }
-  if (mode === "custom") {
-    return "custom";
+  if (mode === "custom" || mode === "mcdr") {
+    return mode;
   }
   return mapStartupModeForApi(mode);
 }

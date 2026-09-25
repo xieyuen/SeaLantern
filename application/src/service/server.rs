@@ -252,6 +252,7 @@ impl CoreServerService {
             StartupMode::Shell => CommandBuildMode::Shell,
             StartupMode::PowerShell => CommandBuildMode::PowerShell,
             StartupMode::Custom => CommandBuildMode::Custom,
+            StartupMode::Mcdr => CommandBuildMode::Mcdr,
         };
 
         // 组装 JVM 参数（Xmx/Xms/编码 + 实例自定义参数）。

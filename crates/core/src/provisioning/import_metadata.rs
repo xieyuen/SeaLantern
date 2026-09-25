@@ -515,6 +515,7 @@ fn launch_target_summary(target: &LaunchTarget) -> (&'static str, Option<PathBuf
         LaunchTarget::MainClass { .. } => ("main_class", None),
         LaunchTarget::ArgumentFiles { paths } => ("argument_files", paths.first().cloned()),
         LaunchTarget::Script { path } => ("script", Some(path.clone())),
+        LaunchTarget::Command { .. } => ("command", None),
     }
 }
 

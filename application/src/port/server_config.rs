@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use sealantern_contract::ServerConfigServiceError;
-use sealantern_contract::server_config::ServerProperties;
+use sealantern_contract::server_config::{McdrConfig, McdrConfigFile, ServerProperties};
 
 /// 服务器配置（server.properties）宿主能力端口。
 ///
@@ -54,4 +54,36 @@ pub trait ServerConfigService: Send + Sync {
         source: &str,
         values: &BTreeMap<String, String>,
     ) -> Result<String, ServerConfigServiceError>;
+
+    /// 读取服务器目录下的 MCDR 配置文件（`config.yml` / `permission.yml`）为可视化结构。
+    ///
+    /// 文件不存在时返回空配置（不报错）。仅暴露顶层简单标量键，嵌套结构保留在原始文本。
+    async fn read_mcdr_config(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+    ) -> Result<McdrConfig, ServerConfigServiceError>;
+
+    /// 按键值对更新 MCDR 配置文件（保留注释、顺序与嵌套结构）。
+    async fn write_mcdr_config(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+        values: &BTreeMap<String, String>,
+    ) -> Result<(), ServerConfigServiceError>;
+
+    /// 读取 MCDR 配置文件原始文本。
+    async fn read_mcdr_config_source(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+    ) -> Result<String, ServerConfigServiceError>;
+
+    /// 直接写入 MCDR 配置文件原始文本。
+    async fn write_mcdr_config_source(
+        &self,
+        server_path: &str,
+        file: McdrConfigFile,
+        source: &str,
+    ) -> Result<(), ServerConfigServiceError>;
 }

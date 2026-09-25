@@ -4,6 +4,7 @@ mod generic;
 mod hybrid;
 mod limbo;
 mod manifest_attributes;
+mod mcdr;
 mod paperclip;
 mod proxy;
 mod sponge;
@@ -251,6 +252,14 @@ const PRODUCTS: &[ProductDefinition] = &[
         "",
         "",
     ),
+    ProductDefinition::new(
+        "mcdr",
+        "MCDReforged",
+        NO_ECOSYSTEMS,
+        ServerCategory::JavaGameServer,
+        "",
+        "",
+    ),
 ];
 
 #[derive(Debug, Clone, Copy)]
@@ -382,6 +391,7 @@ pub(super) fn detect_directory(
 ) -> DetectorOutput {
     let mut findings = Findings::default();
     detect_filename(path, &mut findings);
+    mcdr::detect(path, &mut findings);
     for root_archive in &directory.root_archives {
         let archive_path = path.join(&root_archive.relative_path);
         let artifact = root_artifact(&root_archive.metadata);

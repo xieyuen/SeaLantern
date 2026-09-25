@@ -38,18 +38,25 @@ impl LaunchAdapterError {
 pub(super) fn adapt_launch_profile(
     profile: &LaunchProfile,
 ) -> Result<LocalLaunch, LaunchAdapterError> {
-    let (startup_mode, startup_target, jvm_arguments) = match &profile.target {
+    let (startup_mode, startup_target, custom_command, jvm_arguments) = match &profile.target {
         LaunchTarget::Jar { path } => {
             if !profile.program_arguments.is_empty() {
                 return Err(LaunchAdapterError::ProgramArguments);
             }
-            (StartupMode::Jar, path.clone(), profile.jvm_arguments.to_vec())
+            (StartupMode::Jar, Some(path.clone()), None, profile.jvm_arguments.to_vec())
         }
         LaunchTarget::Script { path } => {
             let Some(mode) = script_startup_mode(path) else {
                 return Err(LaunchAdapterError::ScriptType);
             };
-            (mode, path.clone(), Vec::new())
+            (mode, Some(path.clone()), None, Vec::new())
+        }
+        // MCDR 包裹层：以自定义命令承载探测到的启动命令，无启动目标文件。
+        LaunchTarget::Command { command } => {
+            if !profile.program_arguments.is_empty() {
+                return Err(LaunchAdapterError::ProgramArguments);
+            }
+            (StartupMode::Mcdr, None, Some(command.clone()), Vec::new())
         }
         LaunchTarget::MainClass { .. } => return Err(LaunchAdapterError::MainClass),
         LaunchTarget::ArgumentFiles { .. } => return Err(LaunchAdapterError::ArgumentFiles),
@@ -57,8 +64,8 @@ pub(super) fn adapt_launch_profile(
 
     Ok(LocalLaunch {
         startup_mode,
-        startup_target: Some(startup_target),
-        custom_command: None,
+        startup_target,
+        custom_command,
         custom_executable: None,
         custom_arguments: Vec::new(),
         java_executable: None,
@@ -108,5 +115,20 @@ mod tests {
             })),
             Err(LaunchAdapterError::ArgumentFiles)
         );
+    }
+
+    #[test]
+    fn adapts_a_command_target_to_an_mcdr_launch() {
+        use crate::instance::StartupMode;
+
+        let adapted = adapt_launch_profile(&profile(LaunchTarget::Command {
+            command: "mcdreforged".to_string(),
+        }))
+        .expect("command target should adapt");
+
+        assert_eq!(adapted.startup_mode, StartupMode::Mcdr);
+        assert_eq!(adapted.custom_command.as_deref(), Some("mcdreforged"));
+        assert!(adapted.startup_target.is_none());
+        assert!(adapted.custom_executable.is_none());
     }
 }

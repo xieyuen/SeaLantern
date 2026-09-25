@@ -279,10 +279,22 @@ pub enum LaunchPlatform {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum LaunchTarget {
-    Jar { path: PathBuf },
-    MainClass { class_name: String },
-    ArgumentFiles { paths: Vec<PathBuf> },
-    Script { path: PathBuf },
+    Jar {
+        path: PathBuf,
+    },
+    MainClass {
+        class_name: String,
+    },
+    ArgumentFiles {
+        paths: Vec<PathBuf>,
+    },
+    Script {
+        path: PathBuf,
+    },
+    /// 直接执行命令的启动目标（如 MCDReforged 的 `mcdreforged`）。
+    Command {
+        command: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

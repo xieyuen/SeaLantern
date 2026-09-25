@@ -1,4 +1,4 @@
-export type StartupMode = "starter" | "jar" | "bat" | "sh" | "ps1" | "custom";
+export type StartupMode = "starter" | "jar" | "bat" | "sh" | "ps1" | "custom" | "mcdr";
 
 export interface StartupCandidate {
   // 前端唯一标识，用于 Step3 选择态保存。
